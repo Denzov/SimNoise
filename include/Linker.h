@@ -27,7 +27,7 @@ struct Settings{
 
 class Linker{
 private:       
-    const std::string DIR_NAME = "UserCode/";
+    const std::string DIR_NAME = "UserCode\\";
     const std::string USER_FILE_NAME = DIR_NAME + "UserCode.cpp";
     const std::string CONFIG_NAME = DIR_NAME + "CONFIG";
 
@@ -41,15 +41,19 @@ private:
         "void decoder(char* data, char* out, char length){\n\t/*YOUR USER CODE*/\n}\n");
 
     const std::string CONTENT_CONFIG = std::string(
-        
-    );
+        ".SIM_TYPE=0\n") + std::string(
+        ".ERROR_CHANGE=0.0\n") + std::string(
+        ".ENCODER_BLOCK_SIZE=0\n") + std::string(
+        ".DECODER_BLOCK_SIZE=0\n") + std::string(
+        ".LANGUAGE=0\n");
+
     std::string cmdUserCodeToDll = "g++ -shared -o " + USER_DLL_NAME + " " + USER_FILE_NAME;
         
     bool FLAG_USER_CODE_PASSED = 0;
     bool FLAG_CONFIG_PASSED = 0;
 
     Settings settings;
-
+ 
     Coder encoder;
     Coder decoder;
     
@@ -58,7 +62,7 @@ public:
     
     bool isLoadedUserCode();
     void passUserCode();
-
+    
     void passConfig();
 };
 

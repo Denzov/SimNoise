@@ -8,7 +8,8 @@
 #include "Linker.h"
 
 enum PROGRAM_STATE : uint8_t{
-    CHOOSE = 0,
+    WELCOME_PAGE = 0,
+    CHOOSE,
     RUN,
     SETTING_MENU,
     HELP_MENU,
@@ -21,6 +22,7 @@ enum MAIN_MENU_STATE : uint8_t{
     START = 0,
     SETTINGS,
     HELP,
+    PRINT_LOGO,
     CLOSE,
 
     MAIN_MENU_STATES_SIZE
@@ -46,7 +48,7 @@ struct TextUI{
     enum RUN_STRING{FIRST, RUN_STRINGS_SIZE};
     static const std::string RUN_PAGE[CMD::LANGUAGE_SIZE][RUN_STRINGS_SIZE];
 
-    static constexpr uint8_t HELP_STRINGS_SIZE = 3;
+    static constexpr uint8_t HELP_STRINGS_SIZE = 18;
     static const std::string HELP_PAGE[CMD::LANGUAGE_SIZE][HELP_STRINGS_SIZE];
 };
 
@@ -55,12 +57,14 @@ private:
     char cur_key;
     bool _is_stoped = 0;
 
-    PROGRAM_STATE _program_state = CHOOSE;
+    PROGRAM_STATE _program_state = WELCOME_PAGE;
     MAIN_MENU_STATE _choose_state = START;
 
-    const uint8_t Y_HEADER = 12;
+    const uint8_t Y_VIRTUAL_END = 50;  
+    const uint8_t Y_END_LOGO = 12;  
+    const uint8_t Y_HEADER = 0;
     const uint8_t Y_AFTER_HEADER = Y_HEADER + 1;
-    const uint8_t Y_END_TABLE = Y_HEADER + 28;
+    const uint8_t Y_END_CHOOSE_MENU = Y_HEADER + 4;
     
     const uint8_t X_AFTER_MENU_TABLE = 15;
     const uint8_t X_AFTER_CHOSED = X_AFTER_MENU_TABLE + 35;

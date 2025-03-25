@@ -1,6 +1,6 @@
 #include "../include/CmdUI.h"
 
-CMD::LANGUAGE CMD::_language = EN;
+CMD::LANGUAGE CMD::_language = RU;
 
 const std::string TextUI::PLEASE_PRINT_KEY[CMD::LANGUAGE_SIZE]{
     {"-----PRINT ANY KEY-----"},
@@ -8,8 +8,8 @@ const std::string TextUI::PLEASE_PRINT_KEY[CMD::LANGUAGE_SIZE]{
 };
 
 const std::string TextUI::MAIN_MENU[CMD::LANGUAGE_SIZE][MAIN_MENU_STATES_SIZE]{
-    {"Start", "Settings", "Help", "Close"},
-    {"Начало", "Настройки", "Помощь", "Выход"}
+    {"Start", "Settings", "Help", "Logo", "Close"},
+    {"Начало", "Настройки", "Помощь", "Логотип","Выход"}
 };
 
 const std::string TextUI::HEADERS[CMD::LANGUAGE_SIZE][HEADERS_SIZE]{
@@ -23,14 +23,21 @@ const std::string TextUI::RUN_PAGE[CMD::LANGUAGE_SIZE][TextUI::RUN_STRINGS_SIZE]
 };
 
 const std::string TextUI::HELP_PAGE[CMD::LANGUAGE_SIZE][TextUI::HELP_STRINGS_SIZE]{
-    {"CTRL+C - CLOSE PROGRAM", "UP/DOWN ARROWS - MOVE YOUR CHOOSE", "ENTER | RIGHT/LEFT ARROWS - CHOOSE/CANCEL"},
-    {"CTRL+C - ЗАВЕРШИТЬ ПРОГРАММУ", "СТРЕЛКИ ВВЕРХ/ВНИЗ - ПЕРЕМЕЩАТЬ ВЫБОР", "ENTER | СТРЕЛКИ ПРАВАЯ/ЛЕВАЯ - ВЫБРАТЬ/ОТМЕНИТЬ ВЫБОР"}
+    {"CONTROL:", "\tCTRL+C - CLOSE PROGRAM", "\tUP/DOWN ARROWS - MOVE YOUR CHOOSE", "\tENTER | RIGHT/LEFT ARROWS - CHOOSE/CANCEL",
+    "", "TO SET AN ATTRIBUTE IN A CONFIG, YOU MUST WRITE THE ATTRIBUTE NAME", "\tIN THE CONFIG ITSELF, STARTING WITH A DOT, AND THEN IMMEDIATELY SET ITS VALUE VIA \"=\"",
+    "", "ATTRIBUTES OF CONFIG:", "\t.SIM_TYPE=[int]", "\t.ERROR_CHANGE=[float, value is between 0 and 1]", "\t.ENCODER_BLOCK_SIZE=[int]", "\t.DECODER_BLOCK_SIZE=[int]",
+    "", "THE SYM_TYPE ATTRIBUTE IS DIVIDED INTO FIRST, SECOND, THIRD:", 
+    "\t- FIRST IS A SIMULATION BIT-BY-BIT", "\t- SECOND IS A SIMULATION BYTE-BY-BYTE", "\t- THIRD IS SIMULATION WITH YOUR DATA LOADING"}, 
+
+    {"УПРАВЛЕНИЕ:", "\tCTRL+C - ЗАВЕРШИТЬ ПРОГРАММУ", "\tСТРЕЛКИ ВВЕРХ/ВНИЗ - ПЕРЕМЕЩАТЬ ВЫБОР", "\tENTER | СТРЕЛКИ ПРАВАЯ/ЛЕВАЯ - ВЫБРАТЬ/ОТМЕНИТЬ ВЫБОР",
+    "", "ЧТОБЫ УСТАНОВИТЬ АТРИБУТ В КОНФИГ-ФАЙЛЕ НЕОБХОДИМО В САМОМ ФАЙЛЕ \"CONFIG\"", "\tПРОПИСАТЬ, НАЧИНАЯ С ТОЧКИ, НАЗВАНИЕ АТРИБУТА, ПОТОМ СРАЗУ ЖЕ ВЫСТАВИТЬ ЕГО ЗНАЧЕНИЕ ЧЕРЕЗ \"=\"",
+    "", "АТРИБУТЫ КОНФИГ-ФАЙЛА:", "\t.SIM_TYPE=[int]", "\t.ERROR_CHANGE=[float, значение между 0 и 1]", "\t.ENCODER_BLOCK_SIZE=[int]", "\t.DECODER_BLOCK_SIZE=[int]",
+    "", "АТРИБУТ SYM_TYPE РАЗДЕЛЕН НА ПЕРВЫЙ, ВТОРОЙ И ТРЕТИЙ:",
+    "\t- ПЕРВЫЙ - СИМУЛЯЦИЯ БИТ ЗА БИТОМ", "\t- ВТОРОЙ - СИМУЛЯЦИЯ БАЙТ ЗА БАЙТОМ", "\t- ТРЕТЬЯ - СИМУЛЯЦИЯ С ПОДГРУЗКОЙ ВАШИХ ДАННЫХ"}
 };  
 
 void CmdUI::init(){
     CMD::SET_STANDART();
-    CMD::SET_LANGUAGE(CMD::RU);
-
 }
 
 void CmdUI::get_cur_key(){
@@ -68,6 +75,8 @@ void CmdUI::print_logo(){
     CMD::PRINT("o:o\n", PLANET_COLOR);
     CMD::GOTO(15, 11);
     CMD::PRINT("N O I S E  S I M U L A T I O N\n", CMD::YELLOW, CMD::INVERSION);
+
+    CMD::GOTO(0, 0);
 }
 
 void CmdUI::print_choose_page(){    
@@ -142,12 +151,21 @@ void CmdUI::print_help_page(){
     for(uint8_t shift = 1; shift <= TextUI::HELP_STRINGS_SIZE; shift++){
         CMD::GOTO(X_AFTER_MENU_TABLE, Y_HEADER + shift);
         CMD::PRINT(TextUI::HELP_PAGE[CMD::GET_LANGUAGE()][shift - 1]);
+        
+        if(Y_HEADER + shift > Y_END_CHOOSE_MENU){
+            CMD::GOTO(X_AFTER_MENU_TABLE - 1, Y_HEADER + shift);
+            CMD::PRINT("|", CMD::PURPLE, CMD::BOLD);
+        }
     }
 }
 
 void CmdUI::control_state_machine(){
     switch (_program_state)
     {
+    case PROGRAM_STATE::WELCOME_PAGE:
+        _program_state = CHOOSE;
+        break;
+
     case PROGRAM_STATE::CHOOSE:
         switch (cur_key)
         {
@@ -177,6 +195,10 @@ void CmdUI::control_state_machine(){
             
             case HELP:
                 _program_state = HELP_MENU;
+                break;
+            
+            case PRINT_LOGO:
+                _program_state = WELCOME_PAGE;
                 break;
 
             case CLOSE:
@@ -216,30 +238,40 @@ void CmdUI::control_state_machine(){
             break;
         }
         break;
-    
+
     case PROGRAM_STATE::STOP:
         break;
     }
 }
 
 void CmdUI::display_state_machine(){
-    CMD::GOTO(0, Y_HEADER);
-
-    print_choose_page();
+    CMD::GOTO(0, 0);
 
     switch(_program_state){
+        case PROGRAM_STATE::WELCOME_PAGE:
+            print_logo();
+
+            CMD::GOTO(0, Y_END_LOGO);
+            CMD::PRINT_N_SPACES(19);
+            CMD::PRINT(TextUI::PLEASE_PRINT_KEY[CMD::GET_LANGUAGE()], CMD::RED, CMD::INVERSION);
+            break;
+
         case PROGRAM_STATE::CHOOSE:
+            print_choose_page();
             break;
             
         case PROGRAM_STATE::RUN:
+            print_choose_page();    
             print_run_page();
             break;
 
         case PROGRAM_STATE::SETTING_MENU:
+            print_choose_page();
             print_settings_page();
             break;
         
         case PROGRAM_STATE::HELP_MENU:
+            print_choose_page();
             print_help_page();
             break;
 
@@ -249,18 +281,14 @@ void CmdUI::display_state_machine(){
             break;
     }
 
-    CMD::GOTO(0, Y_END_TABLE);
+    CMD::GOTO(0, Y_VIRTUAL_END);
 }
 
 void CmdUI::Run(){
     init();
-    
-    print_logo();
-    
-    CMD::GOTO(0, Y_HEADER);
-    CMD::PRINT_N_SPACES(19);
-    CMD::PRINT(TextUI::PLEASE_PRINT_KEY[CMD::GET_LANGUAGE()], CMD::RED, CMD::INVERSION);
-    
+
+    display_state_machine();
+
     while(!_is_stoped){      
         get_cur_key();
         if(cur_key == CTRL_C) _program_state = STOP;

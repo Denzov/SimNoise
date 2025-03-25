@@ -13,6 +13,7 @@ void Linker::loadStandartFiles(){
     
     if(!std::filesystem::exists(CONFIG_NAME)){
         std::ofstream config_file(CONFIG_NAME);
+        config_file << CONTENT_CONFIG;
         config_file.close();
     }
 }
@@ -26,8 +27,9 @@ void Linker::passUserCode(){
         FLAG_USER_CODE_PASSED = 1;
         
         system(cmdUserCodeToDll.c_str());
-
         HMODULE hLib = LoadLibrary(USER_DLL_NAME.c_str());
+        
+        system(("attrib +h " + USER_DLL_NAME).c_str());
 
         decoder = (Coder)GetProcAddress(hLib, "decoder");
         encoder = (Coder)GetProcAddress(hLib, "encoder");
@@ -37,5 +39,8 @@ void Linker::passUserCode(){
 void Linker::passConfig(){
     if(!FLAG_CONFIG_PASSED){
         FLAG_CONFIG_PASSED = 1;
+
+
+
     }
 }
