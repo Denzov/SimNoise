@@ -2,9 +2,34 @@
 
 CMD::LANGUAGE CMD::_language = EN;
 
+const std::string TextUI::PLEASE_PRINT_KEY[CMD::LANGUAGE_SIZE]{
+    {"-----PRINT ANY KEY-----"},
+    {"----НАЖМИТЕ КЛАВИШУ----"}
+};
+
+const std::string TextUI::MAIN_MENU[CMD::LANGUAGE_SIZE][MAIN_MENU_STATES_SIZE]{
+    {"Start", "Settings", "Help", "Close"},
+    {"Начало", "Настройки", "Помощь", "Выход"}
+};
+
+const std::string TextUI::HEADERS[CMD::LANGUAGE_SIZE][HEADERS_SIZE]{
+    {"MENU", "RUNNING", "SETTINGS", "HELP"},
+    {"МЕНЮ", "В РАБОТЕ", "НАСТРОЙКИ", "ПОМОЩЬ"}
+};
+
+const std::string TextUI::RUN_PAGE[CMD::LANGUAGE_SIZE][TextUI::RUN_STRINGS_SIZE]{
+    {"# User files is loaded;"},
+    {"# Пользовательские файлы подгружены;"}
+};
+
+const std::string TextUI::HELP_PAGE[CMD::LANGUAGE_SIZE][TextUI::HELP_STRINGS_SIZE]{
+    {"CTRL+C - CLOSE PROGRAM", "UP/DOWN ARROWS - MOVE YOUR CHOOSE", "ENTER | RIGHT/LEFT ARROWS - CHOOSE/CANCEL"},
+    {"CTRL+C - ЗАВЕРШИТЬ ПРОГРАММУ", "СТРЕЛКИ ВВЕРХ/ВНИЗ - ПЕРЕМЕЩАТЬ ВЫБОР", "ENTER | СТРЕЛКИ ПРАВАЯ/ЛЕВАЯ - ВЫБРАТЬ/ОТМЕНИТЬ ВЫБОР"}
+};  
+
 void CmdUI::init(){
     CMD::SET_STANDART();
-    CMD::SET_LANGUAGE(CMD::EN);
+    CMD::SET_LANGUAGE(CMD::RU);
 
 }
 
@@ -46,41 +71,33 @@ void CmdUI::print_logo(){
 }
 
 void CmdUI::print_choose_page(){    
-    switch(CMD::GET_LANGUAGE()){
-        case CMD::EN:
-            CMD::GOTO(3, Y_HEADER);
-            CMD::PRINT_N_SPACES(X_AFTER_MENU_TABLE - 3, CMD::PURPLE, CMD::BOLD, CMD::UNDERLINE);
-            
-            CMD::GOTO(0, Y_HEADER);
-            CMD::PRINT("--|MENU", CMD::PURPLE, CMD::BOLD, CMD::UNDERLINE);
-
-            CMD::GOTO(X_AFTER_MENU_TABLE - 1, Y_HEADER);
-            CMD::PRINT("|", CMD::PURPLE, CMD::BOLD, CMD::UNDERLINE);
-            break;
-
-        case CMD::RU:
-
-            break;
-    }
-
-    for(uint8_t i = 0; i < MAIN_MENU_STATE_SIZE; i++){
-        static std::string choose_options_en[CMD::LANGUAGE_SIZE][MAIN_MENU_STATE_SIZE] = {"Start", "Settings", "Help", "Close"};
+    CMD::GOTO(3, Y_HEADER);
+    CMD::PRINT_N_SPACES(X_AFTER_MENU_TABLE - 3, CMD::PURPLE, CMD::BOLD, CMD::UNDERLINE);
     
+    CMD::GOTO(0, Y_HEADER);
+    CMD::PRINT("  |", CMD::PURPLE, CMD::BOLD, CMD::UNDERLINE);
+
+    CMD::PRINT(TextUI::HEADERS[CMD::GET_LANGUAGE()][TextUI::MAIN], CMD::PURPLE, CMD::BOLD, CMD::UNDERLINE);
+
+    CMD::GOTO(X_AFTER_MENU_TABLE - 1, Y_HEADER);
+    CMD::PRINT("|", CMD::PURPLE, CMD::BOLD, CMD::UNDERLINE);
+
+    for(uint8_t i = 0; i < MAIN_MENU_STATES_SIZE; i++){
         CMD::GOTO(0, Y_AFTER_HEADER + i);
 
         if(_choose_state == static_cast<MAIN_MENU_STATE>(i)){
-            CMD::PRINT("  |->", CMD::GREEN);
-            CMD::PRINT(choose_options_en[CMD::GET_LANGUAGE()][i], CMD::GREEN, CMD::UNDERLINE);
+            CMD::PRINT("  |->", CMD::GREEN, CMD::BOLD);
+            CMD::PRINT(TextUI::MAIN_MENU[CMD::GET_LANGUAGE()][i], CMD::GREEN, CMD::UNDERLINE);
             
             CMD::GOTO(X_AFTER_MENU_TABLE - 1, Y_AFTER_HEADER + i);
-            CMD::PRINT("|");
+            CMD::PRINT("|", CMD::PURPLE, CMD::BOLD);
         }
         else{
-            CMD::PRINT("  |");
-            CMD::PRINT(choose_options_en[CMD::GET_LANGUAGE()][i]);
+            CMD::PRINT("  |", CMD::PURPLE, CMD::BOLD);
+            CMD::PRINT(TextUI::MAIN_MENU[CMD::GET_LANGUAGE()][i], CMD::BASE_COLOR, CMD::BOLD);
 
             CMD::GOTO(X_AFTER_MENU_TABLE - 1, Y_AFTER_HEADER + i);
-            CMD::PRINT("|");
+            CMD::PRINT("|", CMD::PURPLE, CMD::BOLD);
         }
     }   
 }
@@ -91,7 +108,13 @@ void CmdUI::print_run_page(){
     CMD::PRINT("|", CMD::PURPLE, CMD::BOLD, CMD::UNDERLINE);
 
     CMD::GOTO(X_AFTER_MENU_TABLE, Y_HEADER);
-    CMD::PRINT("RUN", CMD::PURPLE, CMD::BOLD, CMD::UNDERLINE);
+    CMD::PRINT(TextUI::HEADERS[CMD::GET_LANGUAGE()][TextUI::RUNNING], CMD::PURPLE, CMD::BOLD, CMD::UNDERLINE);
+
+    uint8_t shift = 1;
+    if(linker.isLoadedUserCode()){
+        CMD::GOTO(X_AFTER_MENU_TABLE, Y_HEADER + shift);
+        CMD::PRINT(TextUI::RUN_PAGE[CMD::GET_LANGUAGE()][TextUI::RUN_STRING::FIRST], CMD::YELLOW, CMD::BOLD);
+    }
 }
 
 void CmdUI::print_settings_page(){
@@ -100,7 +123,7 @@ void CmdUI::print_settings_page(){
     CMD::PRINT("|", CMD::PURPLE, CMD::BOLD, CMD::UNDERLINE);
 
     CMD::GOTO(X_AFTER_MENU_TABLE, Y_HEADER);
-    CMD::PRINT("SETTINGS", CMD::PURPLE, CMD::BOLD, CMD::UNDERLINE);
+    CMD::PRINT(TextUI::HEADERS[CMD::GET_LANGUAGE()][TextUI::SETTINGS], CMD::PURPLE, CMD::BOLD, CMD::UNDERLINE);
 }
 
 void CmdUI::print_help_page(){
@@ -108,17 +131,18 @@ void CmdUI::print_help_page(){
     CMD::PRINT_N_SPACES(X_AFTER_CHOSED - X_AFTER_MENU_TABLE, CMD::PURPLE, CMD::BOLD, CMD::UNDERLINE);
     CMD::PRINT("|", CMD::PURPLE, CMD::BOLD, CMD::UNDERLINE);
 
+    static const uint8_t VALUE_HELP_STRINGS = 4;
+    static const std::string help_en[CMD::LANGUAGE_SIZE][VALUE_HELP_STRINGS];
+
+    uint8_t shift = 0;
+
     CMD::GOTO(X_AFTER_MENU_TABLE, Y_HEADER);
-    CMD::PRINT("HELP", CMD::PURPLE, CMD::BOLD, CMD::UNDERLINE);
+    CMD::PRINT(TextUI::HEADERS[CMD::GET_LANGUAGE()][TextUI::HELP], CMD::PURPLE, CMD::BOLD, CMD::UNDERLINE);
 
-    CMD::GOTO(X_AFTER_MENU_TABLE, Y_HEADER + 1);
-    CMD::PRINT("CTRL+C - CLOSE PROGRAM\n");
-
-    CMD::GOTO(X_AFTER_MENU_TABLE, Y_HEADER + 2);
-    CMD::PRINT("UP/DOWN ARROWS - MOVE YOUR CHOOSE");
-    
-    CMD::GOTO(X_AFTER_MENU_TABLE, Y_HEADER + 3);
-    CMD::PRINT("ENTER | RIGHT/LEFT ARROWS - CHOOSE/CANCEL");
+    for(uint8_t shift = 1; shift <= TextUI::HELP_STRINGS_SIZE; shift++){
+        CMD::GOTO(X_AFTER_MENU_TABLE, Y_HEADER + shift);
+        CMD::PRINT(TextUI::HELP_PAGE[CMD::GET_LANGUAGE()][shift - 1]);
+    }
 }
 
 void CmdUI::control_state_machine(){
@@ -128,11 +152,11 @@ void CmdUI::control_state_machine(){
         switch (cur_key)
         {
         case UP:
-            _choose_state = static_cast<MAIN_MENU_STATE>((_choose_state + MAIN_MENU_STATE_SIZE - 1) % MAIN_MENU_STATE_SIZE);
+            _choose_state = static_cast<MAIN_MENU_STATE>((_choose_state + MAIN_MENU_STATES_SIZE - 1) % MAIN_MENU_STATES_SIZE);
             break;
 
         case DOWN:
-            _choose_state = static_cast<MAIN_MENU_STATE>((_choose_state + 1) % MAIN_MENU_STATE_SIZE);
+            _choose_state = static_cast<MAIN_MENU_STATE>((_choose_state + 1) % MAIN_MENU_STATES_SIZE);
             break;
         
         case ENTER:
@@ -141,6 +165,10 @@ void CmdUI::control_state_machine(){
             {
             case START:
                 _program_state = RUN;                    
+
+                linker.loadStandartFiles();
+                linker.passUserCode();
+        
                 break;
             
             case SETTINGS:
@@ -164,8 +192,8 @@ void CmdUI::control_state_machine(){
                 _choose_state = MAIN_MENU_STATE::START;
                 _program_state = PROGRAM_STATE::CHOOSE;
                 break;
-        }
-        
+            }
+            
         break;
 
     case PROGRAM_STATE::SETTING_MENU:
@@ -204,8 +232,6 @@ void CmdUI::display_state_machine(){
             break;
             
         case PROGRAM_STATE::RUN:
-            linker.loadStandartFiles();
-            linker.loadUserCode();
             print_run_page();
             break;
 
@@ -226,7 +252,6 @@ void CmdUI::display_state_machine(){
     CMD::GOTO(0, Y_END_TABLE);
 }
 
-
 void CmdUI::Run(){
     init();
     
@@ -234,7 +259,7 @@ void CmdUI::Run(){
     
     CMD::GOTO(0, Y_HEADER);
     CMD::PRINT_N_SPACES(19);
-    CMD::PRINT("_____PRINT ANY KEY_____\n", CMD::RED, CMD::INVERSION);
+    CMD::PRINT(TextUI::PLEASE_PRINT_KEY[CMD::GET_LANGUAGE()], CMD::RED, CMD::INVERSION);
     
     while(!_is_stoped){      
         get_cur_key();

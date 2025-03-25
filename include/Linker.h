@@ -6,7 +6,24 @@
 #include <filesystem>
 #include <string>
 
+#include "Cmd.h"
+
 typedef void (*Coder)(char* data, char* out, char length);
+
+struct Settings{
+    enum SIM_TYPE{
+        bit_by_bit,
+        byte_by_byte,
+        loading
+    } simulation_type;
+
+    float error_change;
+
+    uint16_t encoder_block_size;
+    uint16_t decoder_block_size;
+    
+    CMD::LANGUAGE language;
+};
 
 class Linker{
 private:       
@@ -26,15 +43,23 @@ private:
     const std::string CONTENT_CONFIG = std::string(
         
     );
-        
-    bool USER_CODE_LOADED = 0;
     std::string cmdUserCodeToDll = "g++ -shared -o " + USER_DLL_NAME + " " + USER_FILE_NAME;
+        
+    bool FLAG_USER_CODE_PASSED = 0;
+    bool FLAG_CONFIG_PASSED = 0;
+
+    Settings settings;
 
     Coder encoder;
     Coder decoder;
+    
 public:
     void loadStandartFiles();
-    void loadUserCode();
+    
+    bool isLoadedUserCode();
+    void passUserCode();
+
+    void passConfig();
 };
 
 #endif // !_LINKER_H_

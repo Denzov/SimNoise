@@ -14,7 +14,7 @@ enum PROGRAM_STATE : uint8_t{
     HELP_MENU,
     STOP,
 
-    PROGRAM_STATE_SIZE
+    PROGRAM_STATES_SIZE
 };
 
 enum MAIN_MENU_STATE : uint8_t{
@@ -23,7 +23,7 @@ enum MAIN_MENU_STATE : uint8_t{
     HELP,
     CLOSE,
 
-    MAIN_MENU_STATE_SIZE
+    MAIN_MENU_STATES_SIZE
 };
 
 enum INKEY : uint8_t{
@@ -33,6 +33,21 @@ enum INKEY : uint8_t{
     DOWN = 80,
     LEFT = 75,
     RIGHT = 77
+};
+
+
+struct TextUI{
+    static const std::string PLEASE_PRINT_KEY[CMD::LANGUAGE_SIZE];
+
+    enum HEADER{ MAIN, RUNNING, SETTINGS, HELP, HEADERS_SIZE};
+    static const std::string HEADERS[CMD::LANGUAGE_SIZE][HEADERS_SIZE];
+    static const std::string MAIN_MENU[CMD::LANGUAGE_SIZE][MAIN_MENU_STATES_SIZE];
+
+    enum RUN_STRING{FIRST, RUN_STRINGS_SIZE};
+    static const std::string RUN_PAGE[CMD::LANGUAGE_SIZE][RUN_STRINGS_SIZE];
+
+    static constexpr uint8_t HELP_STRINGS_SIZE = 3;
+    static const std::string HELP_PAGE[CMD::LANGUAGE_SIZE][HELP_STRINGS_SIZE];
 };
 
 class CmdUI{
@@ -45,10 +60,10 @@ private:
 
     const uint8_t Y_HEADER = 12;
     const uint8_t Y_AFTER_HEADER = Y_HEADER + 1;
-    const uint8_t Y_END_TABLE = 40;
+    const uint8_t Y_END_TABLE = Y_HEADER + 28;
     
     const uint8_t X_AFTER_MENU_TABLE = 15;
-    const uint8_t X_AFTER_CHOSED = 50;
+    const uint8_t X_AFTER_CHOSED = X_AFTER_MENU_TABLE + 35;
     
     Linker linker;
 
@@ -60,15 +75,15 @@ private:
     void print_run_page();
     void print_settings_page();
     void print_help_page();
-
+   
     void get_cur_key();
     
     void control_state_machine();
     void display_state_machine();
     
 public:
-
     void Run();
+
 };
 
 

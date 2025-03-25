@@ -17,15 +17,25 @@ void Linker::loadStandartFiles(){
     }
 }
 
-void Linker::loadUserCode(){
-    if(!USER_CODE_LOADED){
+bool Linker::isLoadedUserCode(){
+    return FLAG_USER_CODE_PASSED;
+}
+
+void Linker::passUserCode(){
+    if(!FLAG_USER_CODE_PASSED){
+        FLAG_USER_CODE_PASSED = 1;
+        
         system(cmdUserCodeToDll.c_str());
 
-        HMODULE hLib = LoadLibrary("UserCode/UserCode.dll");
+        HMODULE hLib = LoadLibrary(USER_DLL_NAME.c_str());
 
         decoder = (Coder)GetProcAddress(hLib, "decoder");
         encoder = (Coder)GetProcAddress(hLib, "encoder");
+    }
+}
 
-        USER_CODE_LOADED = 1;
+void Linker::passConfig(){
+    if(!FLAG_CONFIG_PASSED){
+        FLAG_CONFIG_PASSED = 1;
     }
 }
