@@ -3,6 +3,7 @@
 
 #include <conio.h>
 #include <thread>
+#include <iostream>
 
 #include "Cmd.h"
 #include "Linker.h"
@@ -11,8 +12,8 @@ enum PROGRAM_STATE : uint8_t{
     WELCOME_PAGE = 0,
     CHOOSE,
     RUN,
-    SETTING_MENU,
-    HELP_MENU,
+    CONFIG_PAGE,
+    HELP_PAGE,
     STOP,
 
     PROGRAM_STATES_SIZE
@@ -20,8 +21,9 @@ enum PROGRAM_STATE : uint8_t{
 
 enum MAIN_MENU_STATE : uint8_t{
     START = 0,
-    SETTINGS,
+    CONFIG,
     HELP,
+    LANGUAGE,
     PRINT_LOGO,
     CLOSE,
 
@@ -37,27 +39,29 @@ enum INKEY : uint8_t{
     RIGHT = 77
 };
 
-
 struct TextUI{
     static const std::string PLEASE_PRINT_KEY[CMD::LANGUAGE_SIZE];
 
-    enum HEADER{ MAIN, RUNNING, SETTINGS, HELP, HEADERS_SIZE};
+    enum HEADER : uint8_t {MAIN, RUNNING, CONFIG, HELP, HEADERS_SIZE};
     static const std::string HEADERS[CMD::LANGUAGE_SIZE][HEADERS_SIZE];
     static const std::string MAIN_MENU[CMD::LANGUAGE_SIZE][MAIN_MENU_STATES_SIZE];
 
     enum RUN_STRING{FIRST, RUN_STRINGS_SIZE};
     static const std::string RUN_PAGE[CMD::LANGUAGE_SIZE][RUN_STRINGS_SIZE];
 
-    static constexpr uint8_t HELP_STRINGS_SIZE = 18;
+    static const std::string CONFIG_SIM_TYPES[Config::SIM_TYPE::SIM_TYPE_SIZE];
+
+    static constexpr uint8_t HELP_STRINGS_SIZE = 19;
     static const std::string HELP_PAGE[CMD::LANGUAGE_SIZE][HELP_STRINGS_SIZE];
 };
 
 class CmdUI{
 private:
-    char cur_key;
+    char _cur_key;
     bool _is_stoped = 0;
 
     PROGRAM_STATE _program_state = WELCOME_PAGE;
+    
     MAIN_MENU_STATE _choose_state = START;
 
     const uint8_t Y_VIRTUAL_END = 50;  
@@ -67,7 +71,7 @@ private:
     const uint8_t Y_END_CHOOSE_MENU = Y_HEADER + 4;
     
     const uint8_t X_AFTER_MENU_TABLE = 15;
-    const uint8_t X_AFTER_CHOSED = X_AFTER_MENU_TABLE + 35;
+    const uint8_t X_AFTER_CHOSED = X_AFTER_MENU_TABLE + 36;
     
     Linker linker;
 
@@ -77,7 +81,7 @@ private:
     
     void print_choose_page();
     void print_run_page();
-    void print_settings_page();
+    void print_config_page();
     void print_help_page();
    
     void get_cur_key();
