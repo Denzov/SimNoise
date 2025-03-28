@@ -23,15 +23,17 @@ const std::string TextUI::RUN_PAGE[CMD::LANGUAGE_SIZE][TextUI::RUN_STRINGS_SIZE]
 };
 
 const std::string TextUI::CONFIG_SIM_TYPES[Config::SIM_TYPE::SIM_TYPE_SIZE]{ 
-    "BIT_BY_BIT", "BYTE_BIT_BYTE", "LOADING"    
+    "BIT_BY_BIT", "BYTE_BY_BYTE", "FROM_LOADING"    
 };
 
 const std::string TextUI::HELP_PAGE[CMD::LANGUAGE_SIZE][TextUI::HELP_STRINGS_SIZE]{
     {"CONTROL:", "\tCTRL+C - CLOSE PROGRAM", "\tUP/DOWN ARROWS - MOVE YOUR CHOOSE", "\tENTER | RIGHT/LEFT ARROWS - CHOOSE/CANCEL",
     "", "TO SET AN ATTRIBUTE IN A CONFIG, YOU MUST WRITE THE ATTRIBUTE NAME", "\tIN THE CONFIG ITSELF, STARTING WITH A DOT, AND THEN IMMEDIATELY SET ITS VALUE VIA \"=\"",
-    "", "ATTRIBUTES OF CONFIG:", "\t.SAMPLES_SIZE=[int]", "\t.SIM_TYPE=[int]", "\t.ERROR_CHANGE=[float, value is between 0 and 1]", "\t.ENCODER_BLOCK_SIZE=[int]", "\t.DECODER_BLOCK_SIZE=[int]",
+    "", "ATTRIBUTES OF CONFIG:", "\t.SAMPLES_SIZE=[int, value is between 1 and 2^63 inclusive]",
+    "\t.SIM_TYPE=[int, value is between 1 and 2^63 inclusive]", "\t.ERROR_CHANGE=[float, value is between 0 and 1 inclusive]", 
+    "\t.ENCODER_BLOCK_SIZE=[int, value is between 1 and 2^63 inclusive]", "\t.DECODER_BLOCK_SIZE=[int, value is between 1 and 2^63 inclusive]",
     "", "THE SYM_TYPE ATTRIBUTE IS DIVIDED INTO FIRST, SECOND, THIRD:", 
-    "\t- FIRST IS A SIMULATION BIT-BY-BIT", "\t- SECOND IS A SIMULATION BYTE-BY-BYTE", "\t- THIRD IS SIMULATION WITH YOUR DATA LOADING"}, 
+    "\t- NULL IS A SIMULATION BIT-BY-BIT", "\t- FIRST IS A SIMULATION BYTE-BY-BYTE", "\t- SECOND IS SIMULATION WITH YOUR DATA LOADING"}, 
 
     {"УПРАВЛЕНИЕ:", "\tCTRL+C - ЗАВЕРШИТЬ ПРОГРАММУ", "\tСТРЕЛКИ ВВЕРХ/ВНИЗ - ПЕРЕМЕЩАТЬ ВЫБОР", "\tENTER | СТРЕЛКИ ПРАВАЯ/ЛЕВАЯ - ВЫБРАТЬ/ОТМЕНИТЬ ВЫБОР",
     "", "ЧТОБЫ УСТАНОВИТЬ АТРИБУТ В КОНФИГ-ФАЙЛЕ НЕОБХОДИМО В САМОМ ФАЙЛЕ \"CONFIG\"", "\tПРОПИСАТЬ, НАЧИНАЯ С ТОЧКИ, НАЗВАНИЕ АТРИБУТА, ПОТОМ СРАЗУ ЖЕ ВЫСТАВИТЬ ЕГО ЗНАЧЕНИЕ ЧЕРЕЗ \"=\"",

@@ -11,7 +11,7 @@ Config& Linker::getConfig(){
 void Linker::config_to_undef(){
     config.samples_size = 0;
     config.simulation_type = Config::SIM_TYPE::UNDEF;
-    config.error_change = 0;
+    config.error_change = -1;
     config.encoder_block_size = 0;
     config.decoder_block_size = 0;
 }
@@ -63,12 +63,11 @@ void Linker::passConfig(){
         
         try
         {
-            int64_t cur_value = 0;
             while(std::getline(config_file, line)){
                 if(line.find(CONFIG_SAMPLES_SIZE) == 0){
-                    cur_value = static_cast<int64_t>(std::stoi(line.substr(strlen(CONFIG_SAMPLES_SIZE))));
+                    auto cur_value = static_cast<int64_t>(std::stoi(line.substr(strlen(CONFIG_SAMPLES_SIZE))));
 
-                    if(is_invalid_config_value(cur_value)){
+                    if(cur_value < SAMPLES_SIZE_MIN_VALUE){
                         FLAG_ERROR_INVALID_SAMPLES_SIZE = 1;
                     }
                     else{
@@ -77,9 +76,9 @@ void Linker::passConfig(){
                     }
                 }
                 else if(line.find(CONFIG_SIMULATION_TYPE) == 0){
-                    cur_value = static_cast<Config::SIM_TYPE>(std::stoi(line.substr(strlen(CONFIG_SIMULATION_TYPE))));
+                    auto cur_value = static_cast<Config::SIM_TYPE>(std::stoi(line.substr(strlen(CONFIG_SIMULATION_TYPE))));
 
-                    if(cur_value < 0 || cur_value > Config::SIM_TYPE::SIM_TYPE_SIZE){
+                    if(cur_value < SIM_TYPE_MIN_VALUE || cur_value > SIM_TYPE_MAX_VALUE){
                         FLAG_ERROR_INVALID_SIMULATION_TYPE = 1;
                     }
                     else{
@@ -88,9 +87,9 @@ void Linker::passConfig(){
                     }
                 }
                 else if(line.find(CONFIG_ERROR_CHANGE) == 0){
-                    float error_change_value = static_cast<float>(std::stof(line.substr(strlen(CONFIG_ERROR_CHANGE))));
+                    auto error_change_value = static_cast<float>(std::stof(line.substr(strlen(CONFIG_ERROR_CHANGE))));
 
-                    if(error_change_value < 0 || error_change_value > 1){
+                    if(error_change_value < ERROR_CHANGE_MIN_VALUE || error_change_value > ERROR_CHANGE_MAX_VALUE){
                         FLAG_ERROR_INVALID_ERROR_CHANGE = 1;
                     }
                     else{
@@ -99,9 +98,9 @@ void Linker::passConfig(){
                     }
                 }
                 else if(line.find(CONFIG_ENCODER_BLOCK_SIZE) == 0){
-                    cur_value = static_cast<int64_t>(std::stoi(line.substr(strlen(CONFIG_ENCODER_BLOCK_SIZE))));
+                    auto cur_value = static_cast<int64_t>(std::stoi(line.substr(strlen(CONFIG_ENCODER_BLOCK_SIZE))));
 
-                    if(is_invalid_config_value(cur_value)){
+                    if(cur_value < ENCODER_BLOCK_SIZE_MIN_VALUE){
                         FLAG_ERROR_INVALID_ENCODER_BLOCK_SIZE = 1;
                     }
                     else{
@@ -110,9 +109,9 @@ void Linker::passConfig(){
                     }
                 }
                 else if(line.find(CONFIG_DECODER_BLOCK_SIZE) == 0){
-                    cur_value = static_cast<int64_t>(std::stoi(line.substr(strlen(CONFIG_DECODER_BLOCK_SIZE))));
+                    auto cur_value = static_cast<int64_t>(std::stoi(line.substr(strlen(CONFIG_DECODER_BLOCK_SIZE))));
 
-                    if(is_invalid_config_value(cur_value)){
+                    if(cur_value < DECODER_BLOCK_SIZE_MIN_VALUE){
                         FLAG_ERROR_INVALID_DECODER_BLOCK_SIZE = 1;
                     }
                     else{
@@ -133,7 +132,7 @@ bool Linker::isPassedConfig(){
     return FLAG_CONFIG_PASSED;
 }
 
-bool Linker::isValidSamplesSize(){
+    bool Linker::isValidSamplesSize(){
     return !FLAG_ERROR_INVALID_SAMPLES_SIZE && (config.samples_size != 0);
 }
 bool Linker::isValidSimulationType(){
