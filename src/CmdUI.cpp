@@ -7,7 +7,7 @@ const std::string TextUI::PLEASE_PRINT_KEY[CMD::LANGUAGE_SIZE]{
     {"----НАЖМИТЕ КЛАВИШУ----"}
 };
 
-const std::string TextUI::MAIN_MENU[CMD::LANGUAGE_SIZE][MAIN_MENU_STATES_SIZE]{
+const std::string TextUI::MAIN_MENU_CHOOSE[CMD::LANGUAGE_SIZE][MAIN_MENU_CHOOSE_STATES_SIZE]{
     {"Start", "Config", "Help", "Language", "Logo", "Close"},
     {"Начало", "Конфиг", "Помощь", "Язык", "Логотип","Выход"}
 };
@@ -22,6 +22,14 @@ const std::string TextUI::RUN_PAGE[CMD::LANGUAGE_SIZE][TextUI::RUN_STRINGS_SIZE]
     {"# Пользовательские файлы подгружены;"}
 };
 
+const std::string TextUI::CONFIG_CHOOSE[CONFIG_CHOOSE_STATES_SIZE]{
+    std::string(TEXT_CONFIG_SAMPLES_SIZE),
+    std::string(TEXT_CONFIG_SIMULATION_TYPE),
+    std::string(TEXT_CONFIG_ERROR_CHANGE),
+    std::string(TEXT_CONFIG_ENCODER_BLOCK_SIZE),
+    std::string(TEXT_CONFIG_DECODER_BLOCK_SIZE)
+};
+
 const std::string TextUI::CONFIG_SIM_TYPES[Config::SIM_TYPE::SIM_TYPE_SIZE]{ 
     "BIT_BY_BIT", "BYTE_BY_BYTE", "FROM_LOADING"    
 };
@@ -32,18 +40,24 @@ const std::string TextUI::HELP_PAGE[CMD::LANGUAGE_SIZE][TextUI::HELP_STRINGS_SIZ
     "", "ATTRIBUTES OF CONFIG:", "\t.SAMPLES_SIZE=[int, value is between 1 and 2^63 inclusive]",
     "\t.SIM_TYPE=[int, value is between 1 and 2^63 inclusive]", "\t.ERROR_CHANGE=[float, value is between 0 and 1 inclusive]", 
     "\t.ENCODER_BLOCK_SIZE=[int, value is between 1 and 2^63 inclusive]", "\t.DECODER_BLOCK_SIZE=[int, value is between 1 and 2^63 inclusive]",
-    "", "THE SYM_TYPE ATTRIBUTE IS DIVIDED INTO FIRST, SECOND, THIRD:", 
+    "", "THE SYM_TYPE ATTRIBUTE IS DIVIDED INTO NULL, FIRST AND SECOND:", 
     "\t- NULL IS A SIMULATION BIT-BY-BIT", "\t- FIRST IS A SIMULATION BYTE-BY-BYTE", "\t- SECOND IS SIMULATION WITH YOUR DATA LOADING"}, 
 
     {"УПРАВЛЕНИЕ:", "\tCTRL+C - ЗАВЕРШИТЬ ПРОГРАММУ", "\tСТРЕЛКИ ВВЕРХ/ВНИЗ - ПЕРЕМЕЩАТЬ ВЫБОР", "\tENTER | СТРЕЛКИ ПРАВАЯ/ЛЕВАЯ - ВЫБРАТЬ/ОТМЕНИТЬ ВЫБОР",
     "", "ЧТОБЫ УСТАНОВИТЬ АТРИБУТ В КОНФИГ-ФАЙЛЕ НЕОБХОДИМО В САМОМ ФАЙЛЕ \"CONFIG\"", "\tПРОПИСАТЬ, НАЧИНАЯ С ТОЧКИ, НАЗВАНИЕ АТРИБУТА, ПОТОМ СРАЗУ ЖЕ ВЫСТАВИТЬ ЕГО ЗНАЧЕНИЕ ЧЕРЕЗ \"=\"",
-    "", "АТРИБУТЫ КОНФИГ-ФАЙЛА:", "\t.SAMPLES_SIZE=[int]", "\t.SIM_TYPE=[int]", "\t.ERROR_CHANGE=[float, значение между 0 и 1]", "\t.ENCODER_BLOCK_SIZE=[int]", "\t.DECODER_BLOCK_SIZE=[int]",
-    "", "АТРИБУТ SYM_TYPE РАЗДЕЛЕН НА ПЕРВЫЙ, ВТОРОЙ И ТРЕТИЙ:",
+    "", "АТРИБУТЫ КОНФИГ-ФАЙЛА:", "\t.SAMPLES_SIZE=[int, значение между 1 и 2^63 включительно]",
+    "\t.SIM_TYPE=[int, значение между 1 и 2^63 включительно]", "\t.ERROR_CHANGE=[float, значение между 0 и 1 включительно]", 
+    "\t.ENCODER_BLOCK_SIZE=[int, значение между 1 и 2^63 включительно]", "\t.DECODER_BLOCK_SIZE=[int, значение между 1 и 2^63 включительно]",
+    "", "АТРИБУТ SYM_TYPE РАЗДЕЛЕН НА НУЛЕВОЙ, ПЕРВЫЙ И ВТОРОЙ:",
     "\t- ПЕРВЫЙ - СИМУЛЯЦИЯ БИТ ЗА БИТОМ", "\t- ВТОРОЙ - СИМУЛЯЦИЯ БАЙТ ЗА БАЙТОМ", "\t- ТРЕТЬЯ - СИМУЛЯЦИЯ С ПОДГРУЗКОЙ ВАШИХ ДАННЫХ"}
 };  
 
 void CmdUI::init(){
     CMD::SET_STANDART();
+
+    _simulator.SetConfig(_linker.getConfig());
+    _simulator.SetDecoder(_linker.getDecoder());
+    _simulator.SetEncoder(_linker.getEncoder());
 }
 
 void CmdUI::get_cur_key(){
@@ -97,19 +111,19 @@ void CmdUI::print_choose_page(){
     CMD::GOTO(X_AFTER_MENU_TABLE - 1, Y_HEADER);
     CMD::PRINT("|", CMD::PURPLE, CMD::BOLD, CMD::UNDERLINE);
 
-    for(uint8_t i = 0; i < MAIN_MENU_STATES_SIZE; i++){
+    for(uint8_t i = 0; i < MAIN_MENU_CHOOSE_STATES_SIZE; i++){
         CMD::GOTO(0, Y_AFTER_HEADER + i);
 
-        if(_choose_state == static_cast<MAIN_MENU_STATE>(i)){
+        if(_main_menu_choose_state == static_cast<MAIN_MENU_CHOOSE_STATE>(i)){
             CMD::PRINT("  |->", CMD::GREEN, CMD::BOLD);
-            CMD::PRINT(TextUI::MAIN_MENU[CMD::GET_LANGUAGE()][i], CMD::GREEN, CMD::UNDERLINE);
+            CMD::PRINT(TextUI::MAIN_MENU_CHOOSE[CMD::GET_LANGUAGE()][i], CMD::GREEN, CMD::UNDERLINE);
             
             CMD::GOTO(X_AFTER_MENU_TABLE - 1, Y_AFTER_HEADER + i);
             CMD::PRINT("|", CMD::PURPLE, CMD::BOLD);
         }
         else{
             CMD::PRINT("  |", CMD::PURPLE, CMD::BOLD);
-            CMD::PRINT(TextUI::MAIN_MENU[CMD::GET_LANGUAGE()][i], CMD::BASE_COLOR, CMD::BOLD);
+            CMD::PRINT(TextUI::MAIN_MENU_CHOOSE[CMD::GET_LANGUAGE()][i], CMD::BASE_COLOR, CMD::BOLD);
 
             CMD::GOTO(X_AFTER_MENU_TABLE - 1, Y_AFTER_HEADER + i);
             CMD::PRINT("|", CMD::PURPLE, CMD::BOLD);
@@ -126,7 +140,7 @@ void CmdUI::print_run_page(){
     CMD::PRINT(TextUI::HEADERS[CMD::GET_LANGUAGE()][TextUI::RUNNING], CMD::PURPLE, CMD::BOLD, CMD::UNDERLINE);
 
     uint8_t shift = 1;
-    if(linker.isLoadedUserCode()){
+    if(_linker.isLoadedUserCode()){
         CMD::GOTO(X_AFTER_MENU_TABLE, Y_HEADER + shift);
         CMD::PRINT(TextUI::RUN_PAGE[CMD::GET_LANGUAGE()][TextUI::RUN_STRING::FIRST], CMD::YELLOW, CMD::BOLD);
     }
@@ -140,65 +154,81 @@ void CmdUI::print_config_page(){
     CMD::GOTO(X_AFTER_MENU_TABLE, Y_HEADER);
     CMD::PRINT(TextUI::HEADERS[CMD::GET_LANGUAGE()][TextUI::CONFIG], CMD::PURPLE, CMD::BOLD, CMD::UNDERLINE);
 
-    if(linker.isPassedConfig()){
-        uint8_t shift = 0;
+    for(uint8_t shift = 0; shift < CONFIG_CHOOSE_STATES_SIZE; shift++){
+        CMD::GOTO(X_AFTER_MENU_TABLE, Y_HEADER + shift + 1);
 
-        CMD::GOTO(X_AFTER_MENU_TABLE, Y_HEADER + ++shift);
-        CMD::PRINT(CONFIG_SAMPLES_SIZE, CMD::BASE_COLOR, CMD::BOLD);
-        if(linker.isValidSamplesSize()){
-            CMD::PRINT(std::to_string(linker.getConfig().samples_size), CMD::YELLOW, CMD::BOLD);
+        if(_config_choose_state == shift){
+            CMD::PRINT(TextUI::CONFIG_CHOOSE[shift], CMD::GREEN, CMD::BOLD);
         }
         else{
-            CMD::PRINT("INVALID_VALUE", CMD::RED, CMD::BOLD);
+            CMD::PRINT(TextUI::CONFIG_CHOOSE[shift], CMD::BASE_COLOR, CMD::BOLD);
         }
         
-        CMD::GOTO(X_AFTER_MENU_TABLE, Y_HEADER + ++shift);
-        CMD::PRINT(CONFIG_SIMULATION_TYPE, CMD::BASE_COLOR, CMD::BOLD);
-        if(linker.isValidSimulationType()){
-            CMD::PRINT(TextUI::CONFIG_SIM_TYPES[linker.getConfig().simulation_type], CMD::YELLOW, CMD::BOLD);
-        }
-        else{
-            CMD::PRINT("INVALID_VALUE", CMD::RED, CMD::BOLD);
-        }
+        std::string str_attribute_value = "";
+        
+        switch (static_cast<CONFIG_CHOOSE_STATE>(shift))
+        {
+        case CONFIG_CHOOSE_STATE::SAMPLES_SIZE:
+            str_attribute_value = std::to_string(_linker.getConfig()->samples_size);
+            
+            if(_linker.isValidSamplesSize()){
+                CMD::PRINT(str_attribute_value, CMD::YELLOW, CMD::BOLD);
+            }
+            else{
+                CMD::PRINT("INVALID_VALUE", CMD::RED, CMD::BOLD);
+            }  
+            break;
 
-        CMD::GOTO(X_AFTER_MENU_TABLE, Y_HEADER + ++shift);
-        CMD::PRINT(CONFIG_ERROR_CHANGE, CMD::BASE_COLOR, CMD::BOLD);
-        if(linker.isValidErrorChange()){
-            CMD::PRINT(std::to_string(linker.getConfig().error_change), CMD::YELLOW, CMD::BOLD);
-        }
-        else{
-            CMD::PRINT("INVALID_VALUE", CMD::RED, CMD::BOLD);
-        }
+        case CONFIG_CHOOSE_STATE::SIM_TYPE:
+            str_attribute_value = TextUI::CONFIG_SIM_TYPES[_linker.getConfig()->simulation_type];
+            
+            if(_linker.isValidSimulationType()){
+                CMD::PRINT(str_attribute_value, CMD::YELLOW, CMD::BOLD);
+            }
+            else{
+                CMD::PRINT("INVALID_VALUE", CMD::RED, CMD::BOLD);
+            }  
+            break;
+        
+        case CONFIG_CHOOSE_STATE::ERROR_CHANGE:
+            str_attribute_value = std::to_string(_linker.getConfig()->error_change);
+            
+            if(_linker.isValidErrorChange()){
+                CMD::PRINT(str_attribute_value, CMD::YELLOW, CMD::BOLD);
+            }
+            else{
+                CMD::PRINT("INVALID_VALUE", CMD::RED, CMD::BOLD);
+            }  
+            break;
 
-        CMD::GOTO(X_AFTER_MENU_TABLE, Y_HEADER + ++shift);
-        CMD::PRINT(CONFIG_ENCODER_BLOCK_SIZE, CMD::BASE_COLOR, CMD::BOLD);
-        if(linker.isValidEncoderBlockSize()){
-            CMD::PRINT(std::to_string(linker.getConfig().encoder_block_size), CMD::YELLOW, CMD::BOLD);
-        }
-        else{
-            CMD::PRINT("INVALID_VALUE", CMD::RED, CMD::BOLD);
-        }
+        case CONFIG_CHOOSE_STATE::ENCODER_BLOCK_SIZE:
+            str_attribute_value = std::to_string(_linker.getConfig()->encoder_block_size);
 
-        CMD::GOTO(X_AFTER_MENU_TABLE, Y_HEADER + ++shift);
-        CMD::PRINT(CONFIG_DECODER_BLOCK_SIZE, CMD::BASE_COLOR, CMD::BOLD);
-        if(linker.isValidDecoderBlockSize()){
-            CMD::PRINT(std::to_string(linker.getConfig().decoder_block_size), CMD::YELLOW, CMD::BOLD);
-        }
-        else{
-            CMD::PRINT("INVALID_VALUE", CMD::RED, CMD::BOLD);
+            if(_linker.isValidEncoderBlockSize()){
+                CMD::PRINT(str_attribute_value, CMD::YELLOW, CMD::BOLD);
+            }
+            else{
+                CMD::PRINT("INVALID_VALUE", CMD::RED, CMD::BOLD);
+            }  
+            break;
+
+        case CONFIG_CHOOSE_STATE::DECODER_BLOCK_SIZE:
+            str_attribute_value = std::to_string(_linker.getConfig()->decoder_block_size);
+
+            if(_linker.isValidDecoderBlockSize()){
+                CMD::PRINT(str_attribute_value, CMD::YELLOW, CMD::BOLD);
+            }
+            else{
+                CMD::PRINT("INVALID_VALUE", CMD::RED, CMD::BOLD);
+            }  
+            break;
         }
     }
-    else{
-        CMD::GOTO(X_AFTER_MENU_TABLE, Y_HEADER + 1);
-        CMD::PRINT("FORMATTING ERROR IN CONFIG");
-    }
-
 }
 
 void CmdUI::print_help_page(){
     CMD::GOTO(X_AFTER_MENU_TABLE, Y_HEADER);
     CMD::PRINT_N_SPACES(X_AFTER_CHOSED - X_AFTER_MENU_TABLE, CMD::PURPLE, CMD::BOLD, CMD::UNDERLINE);
-    // CMD::PRINT("|", CMD::PURPLE, CMD::BOLD, CMD::UNDERLINE);
 
     uint8_t shift = 0;
 
@@ -216,6 +246,53 @@ void CmdUI::print_help_page(){
     }
 }
 
+void CmdUI::config_input_handler(){
+    CMD::GOTO(X_AFTER_MENU_TABLE + strlen(TextUI::CONFIG_CHOOSE[_config_choose_state].c_str()), Y_HEADER + 1 + _config_choose_state);
+    CMD::PRINT_N_SPACES(20);
+    CMD::GOTO(X_AFTER_MENU_TABLE + strlen(TextUI::CONFIG_CHOOSE[_config_choose_state].c_str()), Y_HEADER + 1 + _config_choose_state);
+    
+    
+    std::string input_string = "";
+    std::getline(std::cin, input_string);
+    try
+    {
+        if(input_string != ""){
+            switch (_config_choose_state){
+                case CONFIG_CHOOSE_STATE::SAMPLES_SIZE: 
+                if(std::stoi(input_string) >= SAMPLES_SIZE_MIN_VALUE){
+                    _linker.setSamplesSize(std::stoi(input_string));
+                }
+                break;
+
+            case CONFIG_CHOOSE_STATE::SIM_TYPE:
+                if(std::stoi(input_string) >= SIM_TYPE_MIN_VALUE && std::stoi(input_string) <= SIM_TYPE_MAX_VALUE){
+                    _linker.setSimulationType(std::stoi(input_string));
+                }
+                break;
+
+            case CONFIG_CHOOSE_STATE::ERROR_CHANGE:
+                if(std::stoi(input_string) >= ERROR_CHANGE_MIN_VALUE && std::stoi(input_string) <= ERROR_CHANGE_MAX_VALUE){
+                    _linker.setErrorChange(std::stof(input_string));
+                }
+                break;
+
+            case CONFIG_CHOOSE_STATE::ENCODER_BLOCK_SIZE:
+                if(std::stoi(input_string) >= ENCODER_BLOCK_SIZE_MIN_VALUE){
+                    _linker.setEncoderBlockSize(std::stoi(input_string));
+                }
+                break;
+
+            case CONFIG_CHOOSE_STATE::DECODER_BLOCK_SIZE:
+                if(std::stoi(input_string) >= DECODER_BLOCK_SIZE_MIN_VALUE){
+                    _linker.setDecoderBlockSize(std::stoi(input_string));
+                }
+                break;
+            }
+        }
+    }
+    catch(...){}
+}
+
 void CmdUI::control_state_machine(){
     switch (_program_state)
     {
@@ -227,33 +304,37 @@ void CmdUI::control_state_machine(){
         switch (_cur_key)
         {
         case UP:
-            _choose_state = static_cast<MAIN_MENU_STATE>((_choose_state + MAIN_MENU_STATES_SIZE - 1) % MAIN_MENU_STATES_SIZE);
+            _main_menu_choose_state = static_cast<MAIN_MENU_CHOOSE_STATE>((_main_menu_choose_state + MAIN_MENU_CHOOSE_STATES_SIZE - 1) % MAIN_MENU_CHOOSE_STATES_SIZE);
             break;
-
+        
+        case TAB:
         case DOWN:
-            _choose_state = static_cast<MAIN_MENU_STATE>((_choose_state + 1) % MAIN_MENU_STATES_SIZE);
+            _main_menu_choose_state = static_cast<MAIN_MENU_CHOOSE_STATE>((_main_menu_choose_state + 1) % MAIN_MENU_CHOOSE_STATES_SIZE);
             break;
         
         case ENTER:
         case RIGHT:
-            switch (_choose_state)
+        case CTRL_TAB:
+        switch (_main_menu_choose_state)
             {
             case START:
                 _program_state = RUN;                    
 
-                linker.loadStandartFiles();
+                _linker.loadStandartFiles();
                 
-                linker.passUserCode();
-                linker.passConfig();
+                _linker.passUserFuncs();
+                _linker.passConfig();
+
+                _simulator.simulate_data();
                 break;
             
             case CONFIG:
                 _program_state = CONFIG_PAGE;
 
-                linker.loadStandartFiles();
+                _linker.loadStandartFiles();
                     
-                linker.passUserCode();
-                linker.passConfig();
+                _linker.passUserFuncs();
+                _linker.passConfig();
                 break;
             
             case HELP:
@@ -276,21 +357,36 @@ void CmdUI::control_state_machine(){
     
     case PROGRAM_STATE::RUN:
         switch(_cur_key){
-            case ENTER:
-            case LEFT:
-                _choose_state = MAIN_MENU_STATE::START;
-                _program_state = PROGRAM_STATE::CHOOSE;
-                break;
-            }
+        case ENTER:
+        case LEFT:
+        case CTRL_TAB:
+            _main_menu_choose_state = MAIN_MENU_CHOOSE_STATE::START;
+            _program_state = PROGRAM_STATE::CHOOSE;
+            break;
+        }
         break;
     
     case PROGRAM_STATE::CONFIG_PAGE:
         switch(_cur_key){    
-            case ENTER:
-            case LEFT:
-                _choose_state = MAIN_MENU_STATE::CONFIG;
-                _program_state = PROGRAM_STATE::CHOOSE;
-                break;
+        case ENTER:
+        case LEFT:
+            _main_menu_choose_state = MAIN_MENU_CHOOSE_STATE::CONFIG;
+            _program_state = PROGRAM_STATE::CHOOSE;
+            break;
+
+        case UP:
+            _config_choose_state = static_cast<CONFIG_CHOOSE_STATE>((_config_choose_state + CONFIG_CHOOSE_STATES_SIZE - 1) % CONFIG_CHOOSE_STATES_SIZE);
+            break;
+
+        case TAB:
+        case DOWN:
+            _config_choose_state = static_cast<CONFIG_CHOOSE_STATE>((_config_choose_state + 1) % CONFIG_CHOOSE_STATES_SIZE);
+            break;
+
+        case RIGHT:
+        case CTRL_TAB:
+            config_input_handler();
+            break;
         }
         break;
 
@@ -299,7 +395,8 @@ void CmdUI::control_state_machine(){
         {
         case ENTER:
         case LEFT:
-            _choose_state = MAIN_MENU_STATE::HELP;
+        case CTRL_TAB:
+            _main_menu_choose_state = MAIN_MENU_CHOOSE_STATE::HELP;
             _program_state = PROGRAM_STATE::CHOOSE;
             break;
         }
@@ -314,38 +411,44 @@ void CmdUI::display_state_machine(){
     CMD::GOTO(0, 0);
 
     switch(_program_state){
-        case PROGRAM_STATE::WELCOME_PAGE:
-            print_logo();
+    case PROGRAM_STATE::WELCOME_PAGE:
+        print_logo();
 
-            CMD::GOTO(0, Y_END_LOGO);
-            CMD::PRINT_N_SPACES(19);
-            CMD::PRINT(TextUI::PLEASE_PRINT_KEY[CMD::GET_LANGUAGE()], CMD::RED, CMD::INVERSION);
-            break;
+        CMD::GOTO(0, Y_END_LOGO);
+        CMD::PRINT_N_SPACES(19);
+        CMD::PRINT(TextUI::PLEASE_PRINT_KEY[CMD::GET_LANGUAGE()], CMD::RED, CMD::INVERSION);
+        break;
 
-        case PROGRAM_STATE::CHOOSE:
-            print_choose_page();
-            break;
-            
-        case PROGRAM_STATE::RUN:
-            print_choose_page();    
-            print_run_page();
-
-            break;
-
-        case PROGRAM_STATE::CONFIG_PAGE:
-            print_choose_page();    
-            print_config_page();
-            break;
+    case PROGRAM_STATE::CHOOSE:
+        print_choose_page();
+        break;
         
-        case PROGRAM_STATE::HELP_PAGE:
-            print_choose_page();
-            print_help_page();
-            break;
+    case PROGRAM_STATE::RUN:
+        print_choose_page();    
+        print_run_page();
 
-        case PROGRAM_STATE::STOP:
-            CMD::CLEAR_ALL();
-            _is_stoped = 1;
-            break;
+        CMD::GOTO(10, 20);
+        CMD::PRINT("data\n");
+
+        _simulator.print_simulated_data();
+
+        break;
+
+    case PROGRAM_STATE::CONFIG_PAGE:
+        print_choose_page();    
+        print_config_page();
+
+        break;
+    
+    case PROGRAM_STATE::HELP_PAGE:
+        print_choose_page();
+        print_help_page();
+        break;
+
+    case PROGRAM_STATE::STOP:
+        CMD::CLEAR_ALL();
+        _is_stoped = 1;
+        break;
     }
 
     CMD::GOTO(0, Y_VIRTUAL_END);
