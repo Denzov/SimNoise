@@ -26,25 +26,25 @@ void Simulator::print_simulated_data(){
     }
 }
 
-void Simulator::simulate_data(){
-    uint64_t byte_encoder_block_size = std::ceil(static_cast<float>(_config->encoder_block_size) / BYTE_SIZE);
+void Simulator::load_simulated_data(){
+    _byte_encoder_block_size = std::ceil(static_cast<float>(_config->encoder_block_size) / BYTE_SIZE);
     FLAG_SIMULATED_EVEN_IN_BYTES = _config->encoder_block_size % 8 == 0;
 
     _simulated_data = new uint8_t*[_config->samples_size];
 
     if(FLAG_SIMULATED_EVEN_IN_BYTES){
         for(uint64_t sample = 0; sample < _config->samples_size; sample++){
-            _simulated_data[sample] = new uint8_t[byte_encoder_block_size];      
-            for(uint64_t byte = 0; byte < byte_encoder_block_size; byte++){
+            _simulated_data[sample] = new uint8_t[_byte_encoder_block_size];      
+            for(uint64_t byte = 0; byte < _byte_encoder_block_size; byte++){
                 _simulated_data[sample][byte] = get_random_int_255();
             }
         }
     }
     else{
         for(uint64_t sample = 0; sample < _config->samples_size; sample++){
-            _simulated_data[sample] = new uint8_t[byte_encoder_block_size];      
-            for(uint64_t byte = 0; byte < byte_encoder_block_size; byte++){
-                if(byte == byte_encoder_block_size - 1){
+            _simulated_data[sample] = new uint8_t[_byte_encoder_block_size];      
+            for(uint64_t byte = 0; byte < _byte_encoder_block_size; byte++){
+                if(byte == _byte_encoder_block_size - 1){
                     _simulated_data[sample][byte] = get_random_int_255() % (1 << (_config->encoder_block_size % 8));
                 }
                 else{
@@ -53,6 +53,14 @@ void Simulator::simulate_data(){
             }
         }
     }
+}
+
+voidC Simulator::load_encoded_data(){
+
+}
+
+void Simulator::Init(){
+
 }
 
 void Simulator::SetDecoder(Coder* decoder){

@@ -325,7 +325,7 @@ void CmdUI::control_state_machine(){
                 _linker.passUserFuncs();
                 _linker.passConfig();
 
-                _simulator.simulate_data();
+                _simulator.load_simulated_data();
                 break;
             
             case CONFIG:
