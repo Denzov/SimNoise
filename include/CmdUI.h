@@ -80,7 +80,7 @@ private:
     MAIN_MENU_CHOOSE_STATE _main_menu_choose_state = static_cast<MAIN_MENU_CHOOSE_STATE>(0);
     CONFIG_CHOOSE_STATE _config_choose_state = static_cast<CONFIG_CHOOSE_STATE>(0);
 
-    const uint8_t Y_VIRTUAL_END = 50;  
+    const uint8_t Y_VIRTUAL_END = 29;  
     const uint8_t Y_END_LOGO = 12;  
     const uint8_t Y_HEADER = 0;
     const uint8_t Y_AFTER_HEADER = Y_HEADER + 1;

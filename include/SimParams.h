@@ -3,15 +3,15 @@
 
 #include <stdint.h>
 
-typedef void (*Coder)(char* data, char* out, char length);
+typedef void (*Coder)(uint8_t* data, uint8_t* out, int64_t data_length);
 
 struct Config{
-    uint64_t samples_size;
+    int64_t samples_size;
     
     enum SIM_TYPE : uint8_t{
-        bit_by_bit = 0,
-        byte_by_byte,
-        loading,
+        BIT_BY_BIT = 0,
+        BYTE_BY_BYTE,
+        FROM_LOADING,
         
         SIM_TYPE_SIZE, 
         
@@ -20,8 +20,8 @@ struct Config{
 
     float error_change;
 
-    uint64_t encoder_block_size;
-    uint64_t decoder_block_size;   
+    int64_t encoder_bit_block_size;
+    int64_t decoder_bit_block_size;   
 };
 
 #define SAMPLES_SIZE_MIN_VALUE (1)

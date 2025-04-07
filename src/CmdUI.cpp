@@ -55,9 +55,9 @@ const std::string TextUI::HELP_PAGE[CMD::LANGUAGE_SIZE][TextUI::HELP_STRINGS_SIZ
 void CmdUI::init(){
     CMD::SET_STANDART();
 
-    _simulator.SetConfig(_linker.getConfig());
     _simulator.SetDecoder(_linker.getDecoder());
     _simulator.SetEncoder(_linker.getEncoder());
+    _simulator.SetConfig(_linker.getConfig());
 }
 
 void CmdUI::get_cur_key(){
@@ -95,8 +95,6 @@ void CmdUI::print_logo(){
     CMD::PRINT("o:o\n", PLANET_COLOR);
     CMD::GOTO(15, 11);
     CMD::PRINT("N O I S E  S I M U L A T I O N\n", CMD::YELLOW, CMD::INVERSION);
-
-    CMD::GOTO(0, 0);
 }
 
 void CmdUI::print_choose_page(){    
@@ -140,6 +138,7 @@ void CmdUI::print_run_page(){
     CMD::PRINT(TextUI::HEADERS[CMD::GET_LANGUAGE()][TextUI::RUNNING], CMD::PURPLE, CMD::BOLD, CMD::UNDERLINE);
 
     uint8_t shift = 1;
+    
     if(_linker.isLoadedUserCode()){
         CMD::GOTO(X_AFTER_MENU_TABLE, Y_HEADER + shift);
         CMD::PRINT(TextUI::RUN_PAGE[CMD::GET_LANGUAGE()][TextUI::RUN_STRING::FIRST], CMD::YELLOW, CMD::BOLD);
@@ -158,6 +157,7 @@ void CmdUI::print_config_page(){
         CMD::GOTO(X_AFTER_MENU_TABLE, Y_HEADER + shift + 1);
 
         if(_config_choose_state == shift){
+            CMD::PRINT(" ", CMD::GREEN, CMD::BOLD);
             CMD::PRINT(TextUI::CONFIG_CHOOSE[shift], CMD::GREEN, CMD::BOLD);
         }
         else{
@@ -202,7 +202,7 @@ void CmdUI::print_config_page(){
             break;
 
         case CONFIG_CHOOSE_STATE::ENCODER_BLOCK_SIZE:
-            str_attribute_value = std::to_string(_linker.getConfig()->encoder_block_size);
+            str_attribute_value = std::to_string(_linker.getConfig()->encoder_bit_block_size);
 
             if(_linker.isValidEncoderBlockSize()){
                 CMD::PRINT(str_attribute_value, CMD::YELLOW, CMD::BOLD);
@@ -213,7 +213,7 @@ void CmdUI::print_config_page(){
             break;
 
         case CONFIG_CHOOSE_STATE::DECODER_BLOCK_SIZE:
-            str_attribute_value = std::to_string(_linker.getConfig()->decoder_block_size);
+            str_attribute_value = std::to_string(_linker.getConfig()->decoder_bit_block_size);
 
             if(_linker.isValidDecoderBlockSize()){
                 CMD::PRINT(str_attribute_value, CMD::YELLOW, CMD::BOLD);
@@ -247,10 +247,9 @@ void CmdUI::print_help_page(){
 }
 
 void CmdUI::config_input_handler(){
-    CMD::GOTO(X_AFTER_MENU_TABLE + strlen(TextUI::CONFIG_CHOOSE[_config_choose_state].c_str()), Y_HEADER + 1 + _config_choose_state);
+    CMD::GOTO(X_AFTER_MENU_TABLE + strlen(TextUI::CONFIG_CHOOSE[_config_choose_state].c_str()) + 1, Y_HEADER + 1 + _config_choose_state);
     CMD::PRINT_N_SPACES(20);
-    CMD::GOTO(X_AFTER_MENU_TABLE + strlen(TextUI::CONFIG_CHOOSE[_config_choose_state].c_str()), Y_HEADER + 1 + _config_choose_state);
-    
+    CMD::GOTO(X_AFTER_MENU_TABLE + strlen(TextUI::CONFIG_CHOOSE[_config_choose_state].c_str()) + 1, Y_HEADER + 1 + _config_choose_state);   
     
     std::string input_string = "";
     std::getline(std::cin, input_string);
@@ -258,9 +257,9 @@ void CmdUI::config_input_handler(){
     {
         if(input_string != ""){
             switch (_config_choose_state){
-                case CONFIG_CHOOSE_STATE::SAMPLES_SIZE: 
-                if(std::stoi(input_string) >= SAMPLES_SIZE_MIN_VALUE){
-                    _linker.setSamplesSize(std::stoi(input_string));
+            case CONFIG_CHOOSE_STATE::SAMPLES_SIZE: 
+                if(std::stoll(input_string) >= SAMPLES_SIZE_MIN_VALUE){
+                    _linker.setSamplesSize(std::stoll(input_string));
                 }
                 break;
 
@@ -277,14 +276,14 @@ void CmdUI::config_input_handler(){
                 break;
 
             case CONFIG_CHOOSE_STATE::ENCODER_BLOCK_SIZE:
-                if(std::stoi(input_string) >= ENCODER_BLOCK_SIZE_MIN_VALUE){
-                    _linker.setEncoderBlockSize(std::stoi(input_string));
+                if(std::stoll(input_string) >= ENCODER_BLOCK_SIZE_MIN_VALUE){
+                    _linker.setEncoderBlockSize(std::stoll(input_string));
                 }
                 break;
 
             case CONFIG_CHOOSE_STATE::DECODER_BLOCK_SIZE:
-                if(std::stoi(input_string) >= DECODER_BLOCK_SIZE_MIN_VALUE){
-                    _linker.setDecoderBlockSize(std::stoi(input_string));
+                if(std::stoll(input_string) >= DECODER_BLOCK_SIZE_MIN_VALUE){
+                    _linker.setDecoderBlockSize(std::stoll(input_string));
                 }
                 break;
             }
@@ -325,7 +324,10 @@ void CmdUI::control_state_machine(){
                 _linker.passUserFuncs();
                 _linker.passConfig();
 
-                _simulator.load_simulated_data();
+                _simulator.SetEncoder(_linker.getEncoder());
+                _simulator.SetDecoder(_linker.getDecoder());
+                
+                _simulator.Simulate();
                 break;
             
             case CONFIG:
@@ -408,8 +410,6 @@ void CmdUI::control_state_machine(){
 }
 
 void CmdUI::display_state_machine(){
-    CMD::GOTO(0, 0);
-
     switch(_program_state){
     case PROGRAM_STATE::WELCOME_PAGE:
         print_logo();
@@ -427,11 +427,9 @@ void CmdUI::display_state_machine(){
         print_choose_page();    
         print_run_page();
 
-        CMD::GOTO(10, 20);
-        CMD::PRINT("data\n");
+        CMD::GOTO(0, 10);
 
-        _simulator.print_simulated_data();
-
+        _simulator.Print();
         break;
 
     case PROGRAM_STATE::CONFIG_PAGE:

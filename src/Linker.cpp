@@ -4,8 +4,8 @@ void Linker::config_to_undef(){
     _config.samples_size = 0;
     _config.simulation_type = Config::SIM_TYPE::UNDEF;
     _config.error_change = -1;
-    _config.encoder_block_size = 0;
-    _config.decoder_block_size = 0;
+    _config.encoder_bit_block_size = 0;
+    _config.decoder_bit_block_size = 0;
 }
 
 void Linker::update_config_file(){
@@ -15,22 +15,22 @@ void Linker::update_config_file(){
     content_config += std::string(TEXT_CONFIG_SAMPLES_SIZE) + std::to_string(_config.samples_size) + "\n";
     content_config += std::string(TEXT_CONFIG_SIMULATION_TYPE) + std::to_string(_config.simulation_type) + "\n";
     content_config += std::string(TEXT_CONFIG_ERROR_CHANGE) + std::to_string(_config.error_change) + "\n";
-    content_config += std::string(TEXT_CONFIG_ENCODER_BLOCK_SIZE) + std::to_string(_config.encoder_block_size) + "\n";
-    content_config += std::string(TEXT_CONFIG_DECODER_BLOCK_SIZE) + std::to_string(_config.decoder_block_size) + "\n";
+    content_config += std::string(TEXT_CONFIG_ENCODER_BLOCK_SIZE) + std::to_string(_config.encoder_bit_block_size) + "\n";
+    content_config += std::string(TEXT_CONFIG_DECODER_BLOCK_SIZE) + std::to_string(_config.decoder_bit_block_size) + "\n";
 
     config_file << content_config;
 }
 
+Coder Linker::getDecoder(){
+    return _decoder;
+}
+
+Coder Linker::getEncoder(){
+    return _encoder;
+}
+
 Config* Linker::getConfig(){
     return &_config;
-}
-
-Coder* Linker::getDecoder(){
-    return &_decoder;
-}
-
-Coder* Linker::getEncoder(){
-    return &_encoder;
 }
 
 void Linker::setSamplesSize(uint64_t value){
@@ -52,13 +52,13 @@ void Linker::setErrorChange(float value){
 }
 
 void Linker::setEncoderBlockSize(uint64_t value){
-    _config.encoder_block_size = value;
+    _config.encoder_bit_block_size = value;
 
     update_config_file();
 }
 
 void Linker::setDecoderBlockSize(uint64_t value){
-    _config.decoder_block_size = value;
+    _config.decoder_bit_block_size = value;
 
     update_config_file();
 }
@@ -86,17 +86,19 @@ bool Linker::isLoadedUserCode(){
 }
 
 void Linker::passUserFuncs(){
-    if(!FLAG_USER_CODE_PASSED){
-        FLAG_USER_CODE_PASSED = 1;
-        
-        system(CMD_USER_CODE_TO_DLL.c_str());
-        HMODULE hLib = LoadLibrary(USER_DLL_NAME.c_str());
-        
-        system(("attrib +h " + USER_DLL_NAME).c_str());
-
-        _decoder = (Coder)GetProcAddress(hLib, "decoder");
-        _encoder = (Coder)GetProcAddress(hLib, "encoder");
+    if(FLAG_USER_CODE_PASSED){
+        FreeLibrary(UserDll);
     }
+    
+    system(CMD_USER_CODE_TO_DLL.c_str());
+    UserDll = LoadLibrary(USER_DLL_NAME.c_str());
+    
+    SetFileAttributes(USER_DLL_NAME.c_str(), FILE_ATTRIBUTE_HIDDEN);
+    
+    _decoder = (Coder)GetProcAddress(UserDll, "decoder");
+    _encoder = (Coder)GetProcAddress(UserDll, "encoder");
+    
+    FLAG_USER_CODE_PASSED = 1;
 }
 
 void Linker::passConfig(){
@@ -109,7 +111,7 @@ void Linker::passConfig(){
         while(std::getline(config_file, line)){
             if(line.find(TEXT_CONFIG_SAMPLES_SIZE) == 0){
                 try{
-                    auto cur_value = static_cast<int64_t>(std::stoi(line.substr(strlen(TEXT_CONFIG_SAMPLES_SIZE))));
+                    auto cur_value = static_cast<uint64_t>(std::stoull(line.substr(strlen(TEXT_CONFIG_SAMPLES_SIZE))));
 
                     _config.samples_size = cur_value;
                     FLAG_ERROR_INVALID_SAMPLES_SIZE = 0;
@@ -143,9 +145,9 @@ void Linker::passConfig(){
             }
             else if(line.find(TEXT_CONFIG_ENCODER_BLOCK_SIZE) == 0){
                 try{
-                    auto cur_value = static_cast<int64_t>(std::stoi(line.substr(strlen(TEXT_CONFIG_ENCODER_BLOCK_SIZE))));
+                    auto cur_value = static_cast<uint64_t>(std::stoull(line.substr(strlen(TEXT_CONFIG_ENCODER_BLOCK_SIZE))));
 
-                        _config.encoder_block_size = cur_value;
+                        _config.encoder_bit_block_size = cur_value;
                         FLAG_ERROR_INVALID_ENCODER_BLOCK_SIZE = 0;
                 }
                 catch(...){
@@ -155,9 +157,9 @@ void Linker::passConfig(){
             }
             else if(line.find(TEXT_CONFIG_DECODER_BLOCK_SIZE) == 0){
                 try{
-                    auto cur_value = static_cast<int64_t>(std::stoi(line.substr(strlen(TEXT_CONFIG_DECODER_BLOCK_SIZE))));
+                    auto cur_value = static_cast<uint64_t>(std::stoull(line.substr(strlen(TEXT_CONFIG_DECODER_BLOCK_SIZE))));
 
-                    _config.decoder_block_size = cur_value;
+                    _config.decoder_bit_block_size = cur_value;
                     FLAG_ERROR_INVALID_DECODER_BLOCK_SIZE = 0;
                 }
                 catch(...){
@@ -179,8 +181,8 @@ bool Linker::isValidErrorChange(){
     return !FLAG_ERROR_INVALID_ERROR_CHANGE && (_config.error_change >= ERROR_CHANGE_MIN_VALUE) && (_config.error_change <= ERROR_CHANGE_MAX_VALUE);
 }
 bool Linker::isValidEncoderBlockSize(){
-    return !FLAG_ERROR_INVALID_ENCODER_BLOCK_SIZE && (_config.encoder_block_size >= ENCODER_BLOCK_SIZE_MIN_VALUE);
+    return !FLAG_ERROR_INVALID_ENCODER_BLOCK_SIZE && (_config.encoder_bit_block_size >= ENCODER_BLOCK_SIZE_MIN_VALUE);
 }
 bool Linker::isValidDecoderBlockSize(){
-    return !FLAG_ERROR_INVALID_DECODER_BLOCK_SIZE && (_config.decoder_block_size >= DECODER_BLOCK_SIZE_MIN_VALUE);
+    return !FLAG_ERROR_INVALID_DECODER_BLOCK_SIZE && (_config.decoder_bit_block_size >= DECODER_BLOCK_SIZE_MIN_VALUE);
 }
