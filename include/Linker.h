@@ -11,7 +11,7 @@
 
 constexpr const char* TEXT_CONFIG_SAMPLES_SIZE = "SAMPLES_SIZE=";
 constexpr const char* TEXT_CONFIG_SIMULATION_TYPE = "SIM_TYPE=";
-constexpr const char* TEXT_CONFIG_ERROR_CHANGE = "ERROR_CHANGE=";
+constexpr const char* TEXT_CONFIG_ERROR_CHANGE = "ERROR_CHANCE=";
 constexpr const char* TEXT_CONFIG_ENCODER_BLOCK_SIZE = "ENCODER_BIT_BLOCK_SIZE=";
 constexpr const char* TEXT_CONFIG_DECODER_BLOCK_SIZE = "DECODER_BIT_BLOCK_SIZE=";
 
@@ -23,16 +23,14 @@ private:
 
     const std::string USER_DLL_NAME = DIR_NAME + "UserCode.dll";
 
-    
-    
     const std::string CONTENT_USER_FILE = std::string(
         "typedef unsigned char uint8_t;\n") + std::string(
         "typedef long long int64_t;\n\n") + std::string(
         "extern \"C\" __declspec(dllexport)\n") + std::string(
-        "void encoder(uint8_t* data, uint8_t* out, int64_t data_length){\n") + std::string(
-        "\t/*YOUR USER CODE*/\n}\n\n") + std::string(
+        "bool encoder(uint8_t* data, uint8_t* out, int64_t data_length){\n") + std::string(
+        "\t/*YOUR USER CODE*/\n\treturn true;\n}\n\n") + std::string(
         "extern \"C\" __declspec(dllexport)\n") + std::string(
-        "void decoder(uint8_t* data, uint8_t* out, int64_t data_length){\n\t/*YOUR USER CODE*/\n}\n");
+        "bool decoder(uint8_t* data, uint8_t* out, int64_t data_length){\n\t/*YOUR USER CODE*/\n\treturn true;\n}\n");
 
     const std::string CONTENT_CONFIG = std::string(
         TEXT_CONFIG_SAMPLES_SIZE) + "1\n" + std::string(

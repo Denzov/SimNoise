@@ -38,7 +38,7 @@ const std::string TextUI::HELP_PAGE[CMD::LANGUAGE_SIZE][TextUI::HELP_STRINGS_SIZ
     {"CONTROL:", "\tCTRL+C - CLOSE PROGRAM", "\tUP/DOWN ARROWS - MOVE YOUR CHOOSE", "\tENTER | RIGHT/LEFT ARROWS - CHOOSE/CANCEL",
     "", "TO SET AN ATTRIBUTE IN A CONFIG, YOU MUST WRITE THE ATTRIBUTE NAME", "\tIN THE CONFIG ITSELF, STARTING WITH A DOT, AND THEN IMMEDIATELY SET ITS VALUE VIA \"=\"",
     "", "ATTRIBUTES OF CONFIG:", "\t.SAMPLES_SIZE=[int, value is between 1 and 2^63 inclusive]",
-    "\t.SIM_TYPE=[int, value is between 1 and 2^63 inclusive]", "\t.ERROR_CHANGE=[float, value is between 0 and 1 inclusive]", 
+    "\t.SIM_TYPE=[int, value is between 1 and 2^63 inclusive]", "\t.ERROR_CHANCE=[float, value is between 0 and 1 inclusive]", 
     "\t.ENCODER_BLOCK_SIZE=[int, value is between 1 and 2^63 inclusive]", "\t.DECODER_BLOCK_SIZE=[int, value is between 1 and 2^63 inclusive]",
     "", "THE SYM_TYPE ATTRIBUTE IS DIVIDED INTO NULL, FIRST AND SECOND:", 
     "\t- NULL IS A SIMULATION BIT-BY-BIT", "\t- FIRST IS A SIMULATION BYTE-BY-BYTE", "\t- SECOND IS SIMULATION WITH YOUR DATA LOADING"}, 
@@ -46,7 +46,7 @@ const std::string TextUI::HELP_PAGE[CMD::LANGUAGE_SIZE][TextUI::HELP_STRINGS_SIZ
     {"УПРАВЛЕНИЕ:", "\tCTRL+C - ЗАВЕРШИТЬ ПРОГРАММУ", "\tСТРЕЛКИ ВВЕРХ/ВНИЗ - ПЕРЕМЕЩАТЬ ВЫБОР", "\tENTER | СТРЕЛКИ ПРАВАЯ/ЛЕВАЯ - ВЫБРАТЬ/ОТМЕНИТЬ ВЫБОР",
     "", "ЧТОБЫ УСТАНОВИТЬ АТРИБУТ В КОНФИГ-ФАЙЛЕ НЕОБХОДИМО В САМОМ ФАЙЛЕ \"CONFIG\"", "\tПРОПИСАТЬ, НАЧИНАЯ С ТОЧКИ, НАЗВАНИЕ АТРИБУТА, ПОТОМ СРАЗУ ЖЕ ВЫСТАВИТЬ ЕГО ЗНАЧЕНИЕ ЧЕРЕЗ \"=\"",
     "", "АТРИБУТЫ КОНФИГ-ФАЙЛА:", "\t.SAMPLES_SIZE=[int, значение между 1 и 2^63 включительно]",
-    "\t.SIM_TYPE=[int, значение между 1 и 2^63 включительно]", "\t.ERROR_CHANGE=[float, значение между 0 и 1 включительно]", 
+    "\t.SIM_TYPE=[int, значение между 1 и 2^63 включительно]", "\t.ERROR_CHANCE=[float, значение между 0 и 1 включительно]", 
     "\t.ENCODER_BLOCK_SIZE=[int, значение между 1 и 2^63 включительно]", "\t.DECODER_BLOCK_SIZE=[int, значение между 1 и 2^63 включительно]",
     "", "АТРИБУТ SYM_TYPE РАЗДЕЛЕН НА НУЛЕВОЙ, ПЕРВЫЙ И ВТОРОЙ:",
     "\t- ПЕРВЫЙ - СИМУЛЯЦИЯ БИТ ЗА БИТОМ", "\t- ВТОРОЙ - СИМУЛЯЦИЯ БАЙТ ЗА БАЙТОМ", "\t- ТРЕТЬЯ - СИМУЛЯЦИЯ С ПОДГРУЗКОЙ ВАШИХ ДАННЫХ"}
@@ -191,7 +191,7 @@ void CmdUI::print_config_page(){
             break;
         
         case CONFIG_CHOOSE_STATE::ERROR_CHANGE:
-            str_attribute_value = std::to_string(_linker.getConfig()->error_change);
+            str_attribute_value = std::to_string(_linker.getConfig()->error_chance);
             
             if(_linker.isValidErrorChange()){
                 CMD::PRINT(str_attribute_value, CMD::YELLOW, CMD::BOLD);

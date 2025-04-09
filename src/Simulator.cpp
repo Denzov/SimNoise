@@ -57,8 +57,9 @@ void Simulator::update_back_up_samples_size(){
 }
 
 void Simulator::Print(){
+    printf("Encoder block size bit: %d\n", _config->encoder_bit_block_size % BYTE_SIZE);
     printf("Encoder block size: %d\n", _encoder_block_byte_size);
-    printf("Error change: %f\n\n", _config->error_change);
+    printf("Error change: %f\n\n", _config->error_chance);
 
     printf("Simulated data:\n");
     for(uint64_t sample = 0; sample < _config->samples_size; sample++){
@@ -120,12 +121,12 @@ void Simulator::encode_data(){
     for(int64_t sample = 0; sample < _config->samples_size; sample++){
         _encoded_data[sample] = new uint8_t[_encoder_block_byte_size];
         
-        _encoder(_simulated_data[sample], _encoded_data[sample], _simulation_block_byte_size);
+        _encoder(_simulated_data[sample], _encoded_data[sample]);
     }
 }
 
 void Simulator::decode_data(){
-    FLAG_DECODED_EVEN_IN_BYTES = _config->encoder_bit_block_size % 8 == 0;
+    FLAG_DECODED_EVEN_IN_BYTES = _config->decoder_bit_block_size % 8 == 0;
 
     del_decoded_data();
 
@@ -133,7 +134,7 @@ void Simulator::decode_data(){
     for(int64_t sample = 0; sample < _config->samples_size; sample++){
         _decoded_data[sample] = new uint8_t[_decoder_block_byte_size];
         
-        _decoder(_encoded_data[sample], _decoded_data[sample], _simulation_block_byte_size);
+        _decoder(_encoded_data[sample], _decoded_data[sample]);
     }
 }
 
@@ -155,20 +156,37 @@ void Simulator::add_noise_to_encoded_data(){
 }
 
 void Simulator::noise_bit_by_bit(){
-    for (int64_t sample = 0; sample < _config->samples_size; sample++)
-    {   
-        for(uint8_t byte = 0; byte < _encoder_block_byte_size; byte++){
+    for(int64_t sample = 0; sample < _config->samples_size; sample++){   
+        for(uint8_t byte = 0; byte < _encoder_block_byte_size - 1; byte++){
             for(uint8_t bit = 0; bit < BYTE_SIZE; bit++){
-                if(get_random_float_1() <= _config->error_change){
-                    _encoded_data[sample][byte] = (_encoded_data[sample][byte] & ~(1 << bit)) | ((~(_encoded_data[sample][byte] >> bit) & 0b1) << bit);                    
-                }
+                if(get_random_float_1() <= _config->error_chance){
+                    _encoded_data[sample][byte] = 
+                        (_encoded_data[sample][byte] & ~(1 << bit)) | ((~(_encoded_data[sample][byte] >> bit) & 0b1) << bit);
+                } 
             }      
+        }
+        
+        if(FLAG_ENCODED_EVEN_IN_BYTES){
+            for(uint8_t bit = 0; bit < BYTE_SIZE; bit++){
+                if(get_random_float_1() <= _config->error_chance){
+                    _encoded_data[sample][_encoder_block_byte_size - 1] = 
+                        (_encoded_data[sample][_encoder_block_byte_size - 1] & ~(1 << bit)) | ((~(_encoded_data[sample][_encoder_block_byte_size - 1] >> bit) & 0b1) << bit);
+                } 
+            }
+        }
+        else{
+            for(uint8_t bit = 0; bit < _config->encoder_bit_block_size % BYTE_SIZE; bit++){
+                if(get_random_float_1() <= _config->error_chance){
+                    _encoded_data[sample][_encoder_block_byte_size - 1] = 
+                        (_encoded_data[sample][_encoder_block_byte_size - 1] & ~(1 << bit)) | ((~(_encoded_data[sample][_encoder_block_byte_size - 1] >> bit) & 0b1) << bit);
+                } 
+            }
         }
     }
 }
 
 void Simulator::noise_byte_by_byte(){
-
+    
 }
 
 Simulator::Simulator(){

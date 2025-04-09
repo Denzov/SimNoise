@@ -3,7 +3,7 @@
 void Linker::config_to_undef(){
     _config.samples_size = 0;
     _config.simulation_type = Config::SIM_TYPE::UNDEF;
-    _config.error_change = -1;
+    _config.error_chance = -1;
     _config.encoder_bit_block_size = 0;
     _config.decoder_bit_block_size = 0;
 }
@@ -14,7 +14,7 @@ void Linker::update_config_file(){
     std::string content_config = "";
     content_config += std::string(TEXT_CONFIG_SAMPLES_SIZE) + std::to_string(_config.samples_size) + "\n";
     content_config += std::string(TEXT_CONFIG_SIMULATION_TYPE) + std::to_string(_config.simulation_type) + "\n";
-    content_config += std::string(TEXT_CONFIG_ERROR_CHANGE) + std::to_string(_config.error_change) + "\n";
+    content_config += std::string(TEXT_CONFIG_ERROR_CHANGE) + std::to_string(_config.error_chance) + "\n";
     content_config += std::string(TEXT_CONFIG_ENCODER_BLOCK_SIZE) + std::to_string(_config.encoder_bit_block_size) + "\n";
     content_config += std::string(TEXT_CONFIG_DECODER_BLOCK_SIZE) + std::to_string(_config.decoder_bit_block_size) + "\n";
 
@@ -46,7 +46,7 @@ void Linker::setSimulationType(uint8_t value){
 }
 
 void Linker::setErrorChange(float value){
-    _config.error_change = value;
+    _config.error_chance = value;
 
     update_config_file();
 }
@@ -135,7 +135,7 @@ void Linker::passConfig(){
                 try{
                     auto error_change_value = static_cast<float>(std::stof(line.substr(strlen(TEXT_CONFIG_ERROR_CHANGE))));
 
-                    _config.error_change = error_change_value;
+                    _config.error_chance = error_change_value;
                     FLAG_ERROR_INVALID_ERROR_CHANGE = 0;
                 }
                 catch(...){
@@ -178,7 +178,7 @@ bool Linker::isValidSimulationType(){
     && (_config.simulation_type >= SIM_TYPE_MIN_VALUE) && _config.simulation_type <= SIM_TYPE_MAX_VALUE;
 }
 bool Linker::isValidErrorChange(){
-    return !FLAG_ERROR_INVALID_ERROR_CHANGE && (_config.error_change >= ERROR_CHANGE_MIN_VALUE) && (_config.error_change <= ERROR_CHANGE_MAX_VALUE);
+    return !FLAG_ERROR_INVALID_ERROR_CHANGE && (_config.error_chance >= ERROR_CHANGE_MIN_VALUE) && (_config.error_chance <= ERROR_CHANGE_MAX_VALUE);
 }
 bool Linker::isValidEncoderBlockSize(){
     return !FLAG_ERROR_INVALID_ENCODER_BLOCK_SIZE && (_config.encoder_bit_block_size >= ENCODER_BLOCK_SIZE_MIN_VALUE);

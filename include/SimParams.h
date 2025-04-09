@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-typedef void (*Coder)(uint8_t* data, uint8_t* out, int64_t data_length);
+typedef bool (*Coder)(uint8_t* data, uint8_t* out);
 
 struct Config{
     int64_t samples_size;
@@ -18,7 +18,7 @@ struct Config{
         UNDEF 
     } simulation_type;
 
-    float error_change;
+    float error_chance;
 
     int64_t encoder_bit_block_size;
     int64_t decoder_bit_block_size;   
